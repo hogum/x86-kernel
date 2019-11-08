@@ -32,7 +32,7 @@ impl ColourCode {
     /// Creates a colourcode of given foreground
     /// and background colour
     fn new(foreground: Colour, background: Colour) -> ColourCode {
-        ColourCode(background as u8) << 4 | (foreground as u8)
+        ColourCode((background as u8) << 4 | (foreground as u8))
     }
 }
 
@@ -82,7 +82,7 @@ impl ScreenWriter {
         for byte in s.bytes() {
             match byte {
                 //printable byte or ASCII newline between space and ~
-                0x20..0x7e | b'\n' => self.write_byte(byte),
+                0x20..=0x7e | b'\n' => self.write_byte(byte),
                 // Not in ASCII printable range
                 _ => self.write_byte(0xfe), // ■
             }
