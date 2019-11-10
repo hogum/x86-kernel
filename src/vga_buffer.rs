@@ -1,13 +1,15 @@
 //! Handles printing to VGA
 use core::fmt::{self, Write};
+use lazy_static::lazy_static;
 use volatile::Volatile;
 
-pub static Writer: ScreenWriter = ScreenWriter {
-    column_position: 0,
-    colour_code: ColourCode::new(Colour::Yellow, Colour::Black),
-    buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
-};
-
+lazy_static! {
+    pub static ref Writer: ScreenWriter = ScreenWriter {
+        column_position: 0,
+        colour_code: ColourCode::new(Colour::Yellow, Colour::Black),
+        buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
+    };
+}
 /// Colour bit variants
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 #[repr(u8)]
