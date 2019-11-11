@@ -1,14 +1,15 @@
 //! Handles printing to VGA
-use core::fmt::{self, Write};
+use core::fmt;
 use lazy_static::lazy_static;
+use spin::Mutex;
 use volatile::Volatile;
 
 lazy_static! {
-    pub static ref Writer: ScreenWriter = ScreenWriter {
+    pub static ref WRITER: Mutex<ScreenWriter> = Mutex::new(ScreenWriter {
         column_position: 0,
         colour_code: ColourCode::new(Colour::Yellow, Colour::Black),
         buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
-    };
+    });
 }
 /// Colour bit variants
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
@@ -128,18 +129,4 @@ impl fmt::Write for ScreenWriter {
         self.write_str(s);
         Ok(())
     }
-}
-
-/// Tests printing of characters to screen
-pub fn chekout_print() -> () {
-    let mut writer = ScreenWriter {
-        column_position: 0,
-        colour_code: ColourCode::new(Colour::Green, Colour::Black),
-        buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
-    };
-
-    writer.write_byte(b'I');
-    writer.write_string("chigyIchigy");
-    writer.write_string(" gū");
-    write!(writer, "The odds might be {} against {}", 39, 3 / 33).unwrap();
 }

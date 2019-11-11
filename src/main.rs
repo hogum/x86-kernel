@@ -3,6 +3,7 @@
 
 mod vga_buffer;
 
+use core::fmt::Write;
 use core::panic::PanicInfo;
 
 /// Panic Handler
@@ -12,20 +13,20 @@ use core::panic::PanicInfo;
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
-static VISUAL: &[u8] = b"Underppined legs";
+
 #[no_mangle]
 /// Linker entry point
 pub extern "C" fn _start() -> ! {
-    /*
-    let vga_buffer = 0xb8000 as *mut u8;
-
-    for (i, &byte) in VISUAL.iter().enumerate() {
-        unsafe {
-            *vga_buffer.offset(i as isize * 2) = byte;
-            *vga_buffer.offset(i as isize * 2 + 1) = 0xb;
-        }
-    }
-     * */
-    vga_buffer::chekout_print();
+    vga_buffer::WRITER
+        .lock()
+        .write_str("Hehe! About to get...")
+        .unwrap();
+    write!(
+        vga_buffer::WRITER.lock(),
+        " , some odd stuff: {} {}",
+        32.9,
+        4
+    )
+    .unwrap();
     loop {}
 }
