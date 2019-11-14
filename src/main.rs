@@ -1,5 +1,9 @@
 #![no_std]
 #![no_main]
+#![feature(custom_test_frameworks)]
+#![test_runner(crate::test_runner)]
+//  Rename generated test entry point from `main`
+#![reexport_test_harness_main = "test_main"]
 
 mod vga_buffer;
 
@@ -17,5 +21,24 @@ fn panic(_info: &PanicInfo) -> ! {
 /// Linker entry point
 pub extern "C" fn _start() -> ! {
     println!("Some sodadust {}", "on buckets");
+
+    #[cfg(test)]
+    test_main();
+
     loop {}
+}
+
+#[cfg(test)]
+fn test_runner(tests: &[&dyn Fn()]) {
+    println!("Running {} tests", tests.len());
+    for test in tests {
+        test();
+    }
+}
+
+#[test_case]
+fn oop_trial() {
+    println!("Attempting something");
+    assert_ne!(2, 4);
+    println!("[ok]");
 }
