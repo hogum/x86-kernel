@@ -31,7 +31,7 @@ pub extern "C" fn _start() -> ! {
 
 #[cfg(test)]
 fn test_runner(tests: &[&dyn Fn()]) {
-    println!("Running {} tests", tests.len());
+    serial_println!("Running {} tests", tests.len());
     for test in tests {
         test();
     }
@@ -42,7 +42,7 @@ fn test_runner(tests: &[&dyn Fn()]) {
 fn oop_trial() {
     println!("Attempting something");
     assert_ne!(2, 4);
-    println!("[ok]");
+    serial_println!("[ok]");
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Copy)]
