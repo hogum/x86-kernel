@@ -13,8 +13,20 @@ use core::panic::PanicInfo;
 /// Panic Handler
 ///
 /// Called by the compiler on panic
+#[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
+    println!("{}", _info);
+    loop {}
+}
+
+#[cfg(test)]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    serial_println!("[Failed\n]");
+    serial_print!("Error: {}\n", info);
+    exit_qemu(QemuExitCode::Failed);
+
     loop {}
 }
 
@@ -36,13 +48,6 @@ fn test_runner(tests: &[&dyn Fn()]) {
         test();
     }
     exit_qemu(QemuExitCode::Success);
-}
-
-#[test_case]
-fn oop_trial() {
-    println!("Attempting something");
-    assert_ne!(2, 4);
-    serial_println!("[ok]");
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Copy)]
