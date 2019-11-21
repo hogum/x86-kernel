@@ -147,3 +147,36 @@ macro_rules! println {
     () => ( $crate::print!("\n" ));
     ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
 }
+
+#[cfg(test)]
+use crate::{serial_print, serial_println};
+
+#[test_case]
+/// Should print to buffer without panic
+fn test_prints_a_little() {
+    serial_print!("\tVGA test\nPrinting a little... ");
+    println!("Printng a little more... ");
+
+    serial_println!("About to print heavily... ");
+    for _ in 1..100 {
+        println!("printing heavily..");
+    }
+    serial_println!("[ok]");
+}
+
+#[test_case]
+/// Characters sent to VGA should really appear
+/// in the VGA text buffer
+fn test_sending_chars() {
+    serial_println!("Testing sending of chars to VGA");
+
+    let s = "Some string to be sent";
+    println!("{}", s);
+
+    for (i, c) in s.chars().enumerate() {
+        let screen_char = WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][i].read();
+        assert_eq!(char::from(screen_char.ascii_char), c);
+    }
+
+    serial_println!("[ok]");
+}
