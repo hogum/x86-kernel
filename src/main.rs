@@ -2,13 +2,11 @@
 #![no_main]
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test_runner)]
-//  Rename generated test entry point from `main`
-#![reexport_test_harness_main = "test_main"]
-
-mod serial;
-mod vga_buffer;
+#![reexport_test_harness_main = "test_main"] //  Rename generated test entry point from `main`
 
 use core::panic::PanicInfo;
+
+use crate::println;
 
 /// Panic Handler
 ///
@@ -23,15 +21,11 @@ fn panic(_info: &PanicInfo) -> ! {
 #[cfg(test)]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    serial_println!("[Failed\n]");
-    serial_print!("Error: {}\n", info);
-    exit_qemu(QemuExitCode::Failed);
-
-    loop {}
+    crate::test_panic_handler(info)
 }
 
-#[no_mangle]
 /// Linker entry point
+#[no_mangle]
 pub extern "C" fn _start() -> ! {
     println!("Some sodadust {}", "on buckets");
 
