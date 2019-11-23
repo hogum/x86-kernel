@@ -126,7 +126,7 @@ impl ScreenWriter {
 /// to allow printing of types
 impl fmt::Write for ScreenWriter {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.write_str(s);
+        self.write_str(s)?;
         Ok(())
     }
 }

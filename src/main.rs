@@ -1,12 +1,12 @@
 #![no_std]
 #![no_main]
 #![feature(custom_test_frameworks)]
-#![test_runner(crate::test_runner)]
+#![test_runner(x86_kernel::test_runner)]
 #![reexport_test_harness_main = "test_main"] //  Rename generated test entry point from `main`
 
 use core::panic::PanicInfo;
 
-use crate::println;
+use x86_kernel::{println, serial_println};
 
 /// Panic Handler
 ///
@@ -21,7 +21,7 @@ fn panic(_info: &PanicInfo) -> ! {
 #[cfg(test)]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    crate::test_panic_handler(info)
+    x86_kernel::test_panic_handler(info)
 }
 
 /// Linker entry point
@@ -46,6 +46,7 @@ fn test_runner(tests: &[&dyn Fn()]) {
 
 #[derive(Debug, Clone, Eq, PartialEq, Copy)]
 #[repr(u32)]
+
 /// Represents the status to Qemu
 pub enum QemuExitCode {
     Success = 0x10,
