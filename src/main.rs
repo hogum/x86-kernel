@@ -29,9 +29,14 @@ fn panic(info: &PanicInfo) -> ! {
 pub extern "C" fn _start() -> ! {
     println!("Some sodadust {}", "on buckets");
 
+    x86_kernel::init();
+    // INT3 invokes a breapoint exception
+    x86_64::instructions::interrupts::int3();
+
     #[cfg(test)]
     test_main();
 
+    println!("Completed without crash");
     loop {}
 }
 

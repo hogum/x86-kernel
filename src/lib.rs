@@ -11,22 +11,6 @@ pub mod interrupts;
 pub mod serial;
 pub mod vga_buffer;
 
-pub fn test_runner(tests: &[&dyn Fn()]) -> () {
-    serial_println!("Running {} tests", tests.len());
-
-    for test in tests {
-        test();
-    }
-    exit_qemu(QemuExitCode::Success);
-}
-
-pub fn test_panic_handler(info: &PanicInfo) -> ! {
-    serial_println!("[oops!]");
-    serial_println!("\nError: {}\n", info);
-    exit_qemu(QemuExitCode::Failure);
-    loop {}
-}
-
 /// Tests entry point
 #[cfg(test)]
 #[no_mangle]
@@ -55,4 +39,26 @@ pub fn exit_qemu(code: QemuExitCode) -> () {
         let mut port = Port::new(0xf4);
         port.write(code as u32);
     }
+}
+
+/// General Initializer for the exceptions
+/// Initializes by calling `init_idt`
+pub fn init() {
+    interrupts::init_idt();
+}
+
+pub fn test_runner(tests: &[&dyn Fn()]) -> () {
+    serial_println!("Running {} tests", tests.len());
+
+    for test in tests {
+        test();
+    }
+    exit_qemu(QemuExitCode::Success);
+}
+
+pub fn test_panic_handler(info: &PanicInfo) -> ! {
+    serial_println!("[oops!]");
+    serial_println!("\nError: {}\n", info);
+    exit_qemu(QemuExitCode::Failure);
+    loop {}
 }
