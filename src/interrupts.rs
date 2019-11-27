@@ -15,7 +15,7 @@ lazy_static! {
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
 /// Creates the IDT
-fn init_idt() -> () {
+pub fn init_idt() -> () {
     IDT.load();
 }
 

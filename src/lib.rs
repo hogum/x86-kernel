@@ -15,6 +15,7 @@ pub mod vga_buffer;
 #[cfg(test)]
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    init();
     test_main();
     loop {}
 }
@@ -61,4 +62,12 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
     serial_println!("\nError: {}\n", info);
     exit_qemu(QemuExitCode::Failure);
     loop {}
+}
+
+#[cfg(test)]
+#[test_case]
+fn test_breakpoint_exception() {
+    serial_print!("Testing breakpoint exception\n");
+    x86_64::instructions::interrupts::int3();
+    serial_print!("[ok]\n");
 }
