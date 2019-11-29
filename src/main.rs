@@ -31,6 +31,12 @@ pub extern "C" fn _start() -> ! {
 
     x86_kernel::init();
     // INT3 invokes a breapoint exception
+
+    fn overflow_stack() {
+        // Push the return address for each recursion
+        overflow_stack();
+    }
+    overflow_stack();
     x86_64::instructions::interrupts::int3();
     unsafe {
         *(0xdeadbeef as *mut u64) = 42;
