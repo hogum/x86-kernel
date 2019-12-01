@@ -45,7 +45,9 @@ pub fn exit_qemu(code: QemuExitCode) -> () {
 
 /// General Initializer for the exceptions
 /// Initializes by calling `init_idt`
+/// Loads the GDT
 pub fn init() {
+    gdt::init();
     interrupts::init_idt();
 }
 

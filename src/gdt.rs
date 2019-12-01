@@ -1,9 +1,20 @@
 //! Handles implementations for the Global Descriptor Table
 
 use lazy_static::lazy_static;
-use x86_64::{structures::tss::TaskStateSegment, VirtAddr};
+use x86_64::VirtAddr;
+use x86_64::{structures::tss::TaskStateSegment, Descriptor, GlobalDescriptorTable};
 
 pub const DOUBLE_FAULT_IST_IDX: u16 = 0;
+
+lazy_static! {
+    /// Global DescriptorTable instance
+    static ref GDT: GlobalDescriptorTable = {
+        let mut gdt = GlobalDescriptorTable::new();
+        gdt.add_entry(Descriptor::kernel_code_segment());
+        gdt.add_entry(Descriptor::tss_segment(&TSS));
+        gdt
+    };
+}
 
 lazy_static! {
     static ref TSS: TaskStateSegment = {
@@ -22,4 +33,9 @@ lazy_static! {
         };
         tss
     };
+}
+
+/// Loads the GDT
+pub fn init() {
+    GDT.load();
 }
