@@ -5,15 +5,18 @@ use spin::Mutex;
 use volatile::Volatile;
 
 lazy_static! {
+    /// Holds a ScreenWriter exclusively for reading or
+    /// writing to the Buffer
     pub static ref WRITER: Mutex<ScreenWriter> = Mutex::new(ScreenWriter {
         column_position: 0,
         colour_code: ColourCode::new(Colour::Yellow, Colour::Black),
         buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
     });
 }
-/// Colour bit variants
+
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 #[repr(u8)]
+/// Colour bit variants
 pub enum Colour {
     Black = 0,
     Blue = 1,
@@ -69,7 +72,7 @@ pub struct ScreenWriter {
 }
 
 impl ScreenWriter {
-    /// Writes a single ASCII byte
+    /// Writes a single ASCII byte to Buffer
     pub fn write_byte(&mut self, byte: u8) -> () {
         match byte {
             b'\n' => self.new_line(),
@@ -88,6 +91,8 @@ impl ScreenWriter {
             }
         }
     }
+
+    /// Writes an ACSII string to Buffer
     pub fn write_string(&mut self, s: &str) -> () {
         for byte in s.bytes() {
             match byte {
@@ -126,7 +131,7 @@ impl ScreenWriter {
 /// to allow printing of types
 impl fmt::Write for ScreenWriter {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.write_str(s)?;
+        self.write_string(s);
         Ok(())
     }
 }

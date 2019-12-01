@@ -1,8 +1,9 @@
 //! Handles implementations for the Global Descriptor Table
 
 use lazy_static::lazy_static;
+use x86_64::structures::gdt::{Descriptor, GlobalDescriptorTable};
+use x86_64::structures::tss::TaskStateSegment;
 use x86_64::VirtAddr;
-use x86_64::{structures::tss::TaskStateSegment, Descriptor, GlobalDescriptorTable};
 
 pub const DOUBLE_FAULT_IST_IDX: u16 = 0;
 
@@ -25,7 +26,7 @@ lazy_static! {
             const STACK_SIZE: usize = 4096;
             static mut STACK: [u8; STACK_SIZE] = [0; STACK_SIZE];
 
-            let mut stack_entry = VirtAddr::from_ptr(unsafe { &STACK });// Accessing mut static
+            let stack_entry = VirtAddr::from_ptr(unsafe { &STACK });// Accessing mut static
             let stack_end = stack_entry + STACK_SIZE;
 
             // Stacks grow downwards, so write the top address
