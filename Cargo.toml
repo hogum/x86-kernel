@@ -23,3 +23,7 @@ panic = "abort"
 
 [profile.release]
 panic = "abort"
+
+[[test]]
+name = "overflow"
+harness = false
