@@ -1,3 +1,4 @@
+#![feature(abi_x86_interrupt)]
 //! Double fault stack tests
 //!
 
@@ -7,7 +8,9 @@
 use core::panic::PanicInfo;
 use lazy_static::lazy_static;
 
-use x86_64::structures::idt::InterruptDescriptorTable;
+use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
+
+use x86_kernel::{exit_qemu, serial_println, QemuExitCode};
 
 lazy_static! {
     /// Test Interrupt Descriptor Table
@@ -49,4 +52,15 @@ fn panic(info: &PanicInfo) -> ! {
 #[allow(unconditional_recursion)]
 fn overflow_stack() {
     overflow_stack(); // Push return address on each recursion
+}
+
+/// Marks test as passed by exiting Qemu with a
+/// Success exit
+extern "x86-interrupt" fn test_double_fault_handler(
+    _stack_frame: &mut InterruptStackFrame,
+    _error_code: u64,
+) {
+    serial_println!("[ok]");
+    exit_qemu(QemuExitCode::Success);
+    loop {}
 }
