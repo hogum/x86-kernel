@@ -37,7 +37,7 @@ lazy_static! {
         unsafe {
         idt.double_fault.set_handler_fn(double_fault_handler).set_stack_index(gdt::DOUBLE_FAULT_IST_IDX);
         }
-        idt[InterruptIndex::Timer as_usize()].set_handler_fn(timer_er_interrupt_handler);
+        idt[InterruptIndex::Timer.as_usize()].set_handler_fn(timer_er_interrupt_handler);
         idt
     };
 }
@@ -62,6 +62,12 @@ extern "x86-interrupt" fn double_fault_handler(
     panic!("Exception: Double Fault\n{:#?}", stack_frame);
 }
 
+/// Handler function for the timer interrupt
+/// Implements the CPU reaction to the timer exception
 extern "x86-interrupt" fn timer_er_interrupt_handler(_stack_frame: &mut InterruptStackFrame) {
     println!("Timer interrupt");
+    unsafe {
+        PICS.lock()
+            .notify_end_of_interrupt(InterruptIndex::Timer.as_u8());
+    }
 }

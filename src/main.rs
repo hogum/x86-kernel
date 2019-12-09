@@ -30,7 +30,13 @@ pub extern "C" fn _start() -> ! {
     test_main();
 
     println!("Completed without crash");
-    loop {}
+    loop {
+        use x86_kernel::println;
+        // Introduce deadlock
+        // Interrupt handler should try to print while
+        // the print WRITER is locked
+        println!("!");
+    }
 }
 
 /// Panic Handler
