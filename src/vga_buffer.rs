@@ -142,6 +142,7 @@ macro_rules! print {
 }
 
 #[doc(hidden)]
+/// Prints a formated string to the VGA buffer
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
     use x86_64::instructions::interrupts;
@@ -177,15 +178,19 @@ fn test_prints_a_little() {
 /// Characters sent to VGA should really appear
 /// in the VGA text buffer
 fn test_sending_chars() {
+    use x86_64::instructions::interrupts;
+
     serial_println!("Testing sending of chars to VGA");
 
     let s = "Some string to be sent";
-    println!("{}", s);
+    let mut screen_char_w = WRITER.lock();
 
-    for (i, c) in s.chars().enumerate() {
-        let screen_char = WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][i].read();
-        assert_eq!(char::from(screen_char.ascii_char), c);
-    }
-
-    serial_println!("[ok]");
+    interrupts::without_interrupts(|| {
+        writeln!(screen_char_w, "\n{}", s).expect("writeln failed");
+        for (i, c) in s.chars().enumerate() {
+            let sc_char = screen_char_w.buffer.chars[BUFFER_HEIGHT - 2][i].read();
+            assert_eq!(char::from(screen_char.ascii_char), c);
+        }
+        serial_println!("[ok]");
+    });
 }
