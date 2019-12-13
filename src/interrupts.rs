@@ -80,7 +80,13 @@ extern "x86-interrupt" fn timer_er_interrupt_handler(_stack_frame: &mut Interrup
 
 /// Handles Keyboard interrupts
 extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: &mut InterruptStackFrame) {
-    println!("keyboard interrupt");
+    use x86_64::instructions::port::Port;
+
+    // Read data from PS/2 controller: port number 0x60
+    let mut port = Port::new(0x60);
+    let scancode: u8 = unsafe{ port.read(); }
+    println!("{}", scancode);
+
     unsafe {
         PICS.lock()
             .notify_end_of_interrupt(InterruptIndex::Keyboard.as_u8());
