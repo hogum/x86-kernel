@@ -5,15 +5,18 @@ use spin::Mutex;
 use volatile::Volatile;
 
 lazy_static! {
+    /// Holds a ScreenWriter exclusively for reading or
+    /// writing to the Buffer
     pub static ref WRITER: Mutex<ScreenWriter> = Mutex::new(ScreenWriter {
         column_position: 0,
         colour_code: ColourCode::new(Colour::Yellow, Colour::Black),
         buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
     });
 }
-/// Colour bit variants
+
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 #[repr(u8)]
+/// Colour bit variants
 pub enum Colour {
     Black = 0,
     Blue = 1,
@@ -69,7 +72,7 @@ pub struct ScreenWriter {
 }
 
 impl ScreenWriter {
-    /// Writes a single ASCII byte
+    /// Writes a single ASCII byte to Buffer
     pub fn write_byte(&mut self, byte: u8) -> () {
         match byte {
             b'\n' => self.new_line(),
@@ -88,6 +91,8 @@ impl ScreenWriter {
             }
         }
     }
+
+    /// Writes an ACSII string to Buffer
     pub fn write_string(&mut self, s: &str) -> () {
         for byte in s.bytes() {
             match byte {
@@ -126,7 +131,7 @@ impl ScreenWriter {
 /// to allow printing of types
 impl fmt::Write for ScreenWriter {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.write_str(s)?;
+        self.write_string(s);
         Ok(())
     }
 }
@@ -137,9 +142,14 @@ macro_rules! print {
 }
 
 #[doc(hidden)]
+/// Prints a formated string to the VGA buffer
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
-    WRITER.lock().write_fmt(args).unwrap()
+    use x86_64::instructions::interrupts;
+
+    interrupts::without_interrupts(|| {
+        WRITER.lock().write_fmt(args).unwrap();
+    })
 }
 
 #[macro_export]
@@ -168,15 +178,19 @@ fn test_prints_a_little() {
 /// Characters sent to VGA should really appear
 /// in the VGA text buffer
 fn test_sending_chars() {
+    use x86_64::instructions::interrupts;
+
     serial_println!("Testing sending of chars to VGA");
 
     let s = "Some string to be sent";
-    println!("{}", s);
+    let mut screen_char_w = WRITER.lock();
 
-    for (i, c) in s.chars().enumerate() {
-        let screen_char = WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][i].read();
-        assert_eq!(char::from(screen_char.ascii_char), c);
-    }
-
-    serial_println!("[ok]");
+    interrupts::without_interrupts(|| {
+        writeln!(screen_char_w, "\n{}", s).expect("writeln failed");
+        for (i, c) in s.chars().enumerate() {
+            let sc_char = screen_char_w.buffer.chars[BUFFER_HEIGHT - 2][i].read();
+            assert_eq!(char::from(screen_char.ascii_char), c);
+        }
+        serial_println!("[ok]");
+    });
 }

@@ -3,35 +3,22 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
+#![feature(abi_x86_interrupt)]
 
 use core::panic::PanicInfo;
 
+pub mod gdt;
+pub mod interrupts;
 pub mod serial;
 pub mod vga_buffer;
-
-pub fn test_runner(tests: &[&dyn Fn()]) -> () {
-    serial_println!("Running {} tests", tests.len());
-
-    for test in tests {
-        test();
-    }
-    exit_qemu(QemuExitCode::Success);
-}
-
-pub fn test_panic_handler(info: &PanicInfo) -> ! {
-    serial_println!("[oops!]");
-    serial_println!("\nError: {}\n", info);
-    exit_qemu(QemuExitCode::Failure);
-    loop {}
-}
 
 /// Tests entry point
 #[cfg(test)]
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    init();
     test_main();
-    loop {}
-}
+    halt_loop ();
 
 #[cfg(test)]
 #[panic_handler]
@@ -53,4 +40,46 @@ pub fn exit_qemu(code: QemuExitCode) -> () {
         let mut port = Port::new(0xf4);
         port.write(code as u32);
     }
+}
+
+/// General Initializer for the exceptions
+/// Initializes by calling `init_idt`
+/// Loads the GDT
+pub fn init() {
+    gdt::init();
+    interrupts::init_idt();
+    unsafe {
+        interrupts::PICS.lock().initialize();
+    }
+    x86_64::instructions::interrupts::enable();
+}
+
+/// Halts the CPU until the next interrupt arrives
+/// The CPU is made to go to sleep while idle
+pub fn halt_loop() -> ! {
+    use x86_64::instructions::hlt;
+}
+
+pub fn test_runner(tests: &[&dyn Fn()]) -> () {
+    serial_println!("Running {} tests", tests.len());
+
+    for test in tests {
+        test();
+    }
+    exit_qemu(QemuExitCode::Success);
+}
+
+pub fn test_panic_handler(info: &PanicInfo) -> ! {
+    serial_println!("[oops!]");
+    serial_println!("\nError: {}\n", info);
+    exit_qemu(QemuExitCode::Failure);
+    halt_loop();
+}
+
+#[cfg(test)]
+#[test_case]
+fn test_breakpoint_exception() {
+    serial_print!("Testing breakpoint exception\n");
+    x86_64::instructions::interrupts::int3();
+    serial_print!("[ok]\n");
 }
