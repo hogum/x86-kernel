@@ -14,17 +14,6 @@ pub extern "C" fn _start() -> ! {
     println!("Some sodadust {}", "on buckets");
 
     x86_kernel::init();
-    // INT3 invokes a breapoint exception
-    x86_64::instructions::interrupts::int3();
-
-    fn overflow_stack() {
-        // Push the return address for each recursion
-        overflow_stack();
-    }
-    overflow_stack();
-    unsafe {
-        *(0xdeadbeef as *mut u64) = 42;
-    }
 
     #[cfg(test)]
     test_main();
