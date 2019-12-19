@@ -17,8 +17,13 @@ pub extern "C" fn _start() -> ! {
 
     let ptr = 0xdeadbeaf as *mut u32;
     unsafe {
+        let x = *ptr;
+    }
+    println!("Read works");
+    unsafe {
         *ptr = 42;
     }
+    println!("Write works");
     #[cfg(test)]
     test_main();
 
