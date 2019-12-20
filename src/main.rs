@@ -15,15 +15,13 @@ pub extern "C" fn _start() -> ! {
 
     x86_kernel::init();
 
-    let ptr = 0xdeadbeaf as *mut u32;
-    unsafe {
-        let x = *ptr;
-    }
-    println!("Read works");
-    unsafe {
-        *ptr = 42;
-    }
-    println!("Write works");
+    use x86_64::registers::control::Cr3;
+
+    let (level_four_page_table, _) = Cr3::read(); // (PhysFrame, Cr3Flags)
+    println!(
+        "Level four page table at: {:#?}",
+        level_four_page_table.start_address()
+    );
     #[cfg(test)]
     test_main();
 
