@@ -1,6 +1,6 @@
 /// Interrupts
 ///
-use crate::{gdt, println};
+use crate::{gdt, halt_loop, println};
 use lazy_static::lazy_static;
 
 use pic8259_simple::ChainedPics;
@@ -82,11 +82,10 @@ extern "x86-interrupt" fn timer_er_interrupt_handler(_stack_frame: &mut Interrup
 /// Handles Keyboard interrupts
 extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: &mut InterruptStackFrame) {
     use pc_keyboard::{layouts, DecodedKey, Keyboard, ScancodeSet1};
-    use spin::Mutex;
     use x86_64::instructions::port::Port;
 
     lazy_static! {
-        static ref KEYBOARD: Mutex<Keyboard<layouts::US104Key, ScancodeSet1>> =
+        static ref KEYBOARD: Mutex<Keyboard<layouts::Us104Key, ScancodeSet1>> =
             Mutex::new(Keyboard::new(layouts::Us104Key, ScancodeSet1));
     }
     // Read data from PS/2 controller: port number 0x60
@@ -100,7 +99,7 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: &mut Interrup
     // Translate scan code into <Option<KeyEvent>>
     // KeyEvent: Info on key and whether press on release event
     if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
-        if let Some(key) = keyboard.process_key(key_event) {
+        if let Some(key) = keyboard.process_keyevent(key_event) {
             match key {
                 DecodedKey::Unicode(character) => println!("{}", character),
                 DecodedKey::RawKey(character) => println!("{:?}", character),
@@ -116,7 +115,6 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: &mut Interrup
     }
 }
 
-use crate::hlt_loop;
 use x86_64::structures::idt::PageFaultErrorCode;
 
 /// Handles page fault exceptions
@@ -135,5 +133,5 @@ extern "x86-interrupt" fn page_fault_handler(
         "Error Code: {:#?}\n Stack Frame: {:#?}",
         error_code, stack_frame
     );
-    hlt_loop();
+    halt_loop();
 }

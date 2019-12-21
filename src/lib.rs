@@ -18,7 +18,8 @@ pub mod vga_buffer;
 pub extern "C" fn _start() -> ! {
     init();
     test_main();
-    halt_loop ();
+    halt_loop();
+}
 
 #[cfg(test)]
 #[panic_handler]
@@ -57,7 +58,9 @@ pub fn init() {
 /// Halts the CPU until the next interrupt arrives
 /// The CPU is made to go to sleep while idle
 pub fn halt_loop() -> ! {
-    use x86_64::instructions::hlt;
+    loop {
+        x86_64::instructions::hlt();
+    }
 }
 
 pub fn test_runner(tests: &[&dyn Fn()]) -> () {
