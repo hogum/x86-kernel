@@ -14,8 +14,13 @@ pub mod vga_buffer;
 
 /// Tests entry point
 #[cfg(test)]
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
+use bootloader::{entry_point, BootInfo};
+
+#[cfg(test)]
+entry_point!(test_kernel_entry)
+    
+/// Entry point for `cargo xtest`
+pub  fn test_kernel_entry(_boot_info: &'static BootInfo) -> ! {
     init();
     test_main();
     halt_loop();

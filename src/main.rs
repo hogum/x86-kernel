@@ -8,9 +8,13 @@ use core::panic::PanicInfo;
 
 use x86_kernel::println;
 
+use bootloader::{entry_point, BootInfo};
+
+entry_point!(kernel_entry); // Defined the lower level _start()
+                            // allowing use of a type-checked Rust function as the entry
+
 /// Linker entry point
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
+pub fn kernel_entry(boot_info: &'static BootInfo) -> ! {
     println!("Some sodadust {}", "on buckets");
 
     x86_kernel::init();
