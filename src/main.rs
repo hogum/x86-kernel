@@ -15,9 +15,21 @@ entry_point!(kernel_entry); // Defined the lower level _start()
 
 /// Linker entry point
 pub fn kernel_entry(boot_info: &'static BootInfo) -> ! {
+    use x86_64::VirtualAddr;
+    use x86_kernel::memory::level_four_active_table;
+
     println!("Some sodadust {}", "on buckets");
 
     x86_kernel::init();
+
+    let physical_mem_offset = VirtualAddr::new(boot_info.phyical_memory_offset);
+    let level_four_table = unsafe { level_four_active_table(physical_mem_offset) };
+
+    for (idx, entry) in level_four_table.iter().enumerate() {
+        if !entry.isunused() {
+            println!("L-four entry {} : {:?}", idx, entry);
+        }
+    }
 
     use x86_64::registers::control::Cr3;
 
