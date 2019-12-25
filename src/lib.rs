@@ -9,19 +9,20 @@ use core::panic::PanicInfo;
 
 pub mod gdt;
 pub mod interrupts;
+pub mod memory;
 pub mod serial;
 pub mod vga_buffer;
-pub mod memory;
 
 /// Tests entry point
 #[cfg(test)]
 use bootloader::{entry_point, BootInfo};
 
 #[cfg(test)]
-entry_point!(test_kernel_entry)
-    
+entry_point!(test_kernel_entry);
+
 /// Entry point for `cargo xtest`
-pub  fn test_kernel_entry(_boot_info: &'static BootInfo) -> ! {
+#[cfg(test)]
+pub fn test_kernel_entry(_boot_info: &'static BootInfo) -> ! {
     init();
     test_main();
     halt_loop();
