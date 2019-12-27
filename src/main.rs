@@ -16,7 +16,7 @@ entry_point!(kernel_entry); // Defined the lower level _start()
 /// Linker entry point
 pub fn kernel_entry(boot_info: &'static BootInfo) -> ! {
     use x86_64::{structures::paging::PageTable, VirtAddr};
-    use x86_kernel::memory::level_four_active_table;
+    use x86_kernel::memory::{level_four_active_table, translate_virt_addr};
 
     println!("Some sodadust {}", "on buckets");
 
@@ -24,6 +24,20 @@ pub fn kernel_entry(boot_info: &'static BootInfo) -> ! {
 
     let physical_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
     let level_four_table = unsafe { level_four_active_table(physical_mem_offset) };
+
+    let addresses = [
+        0xb8000,                          // identity-mapped VGA  buffer page
+        0x201008,                         // A code page
+        0x0100_0020_1a10,                 // A stack page
+        boot_info.physical_memory_offset, // virtual addr mapped to physical addr 0
+    ];
+
+    println!("Virtual -> Physical");
+    for &address in &addresses {
+        let virt = VirtAddr::new(address);
+        let phys = unsafe { translate_virt_addr(virt, physical_mem_offset) };
+        println!("{:?} -> {:?}", virt, phys);
+    }
 
     for (idx, entry) in level_four_table.iter().enumerate() {
         if !entry.is_unused() {
