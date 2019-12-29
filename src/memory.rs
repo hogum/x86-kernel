@@ -1,7 +1,31 @@
 //! Mapping of Virtual addresses to Physical Addresses
 
-use x86_64::structures::paging::{OffsetPageTable, PageTable};
+use x86_64::structures::paging::{
+    FrameAllocator, Mapper, OffsetPageTable, Page, PageTable, PageTableFlags, PhysFrame, Size4KiB,
+    UnusedPhysFrame,
+};
 use x86_64::{PhysAddr, VirtAddr};
+
+/// Creates a Page table mapping (Page to Frame) for the VGA buffer Oxb8000
+///
+/// # Arguments
+/// - Page: The page to be mapped
+/// - Frame: The frame to map the page to
+/// - Mapper: Flags for the page table entry
+/// - Frame Allocator: Allocates unused frames.
+///     These might be needed for creation of additional page tables
+pub fn create_mapping(
+    page: Page,
+    mapper: &mut OffsetPageTable,
+    frame_allocator: &mut impl FrameAllocator<Size4KiB>,
+) {
+    let frame = PhysFrame::containing_address(PhysFrame::new(0xb8000));
+    let unused_frame = unsafe { UnusedPhysFrame::new(frame) };
+    let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE;
+
+    let map_to_result = mapper.map_to(page, unused_frame, flags, frame_allocator);
+    map_to_result.expect("map_to failed").flash();
+}
 
 /// Returns a mutable reference to the active level 4 page table
 unsafe fn level_four_active_table(physical_mem_offset: VirtAddr) -> &'static mut PageTable {
