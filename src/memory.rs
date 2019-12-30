@@ -6,6 +6,18 @@ use x86_64::structures::paging::{
 };
 use x86_64::{PhysAddr, VirtAddr};
 
+/// Empty Frame allocator
+/// Returns `None`
+pub struct EmptyFrameAllocator;
+
+// Unsafe -> Guarantee return of only unused frames
+// If two pages are mapped to same physical frame, returns `None`
+unsafe impl FrameAllocator<Size4KiB> for EmptyFrameAllocator {
+    fn allocate_frame(&mut self) -> Option<UnusedPhysFrame> {
+        None
+    }
+}
+
 /// Creates a Page table mapping (Page to Frame) for the VGA buffer Oxb8000
 ///
 /// # Arguments
