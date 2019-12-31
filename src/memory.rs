@@ -31,12 +31,12 @@ pub fn create_mapping(
     mapper: &mut OffsetPageTable,
     frame_allocator: &mut impl FrameAllocator<Size4KiB>,
 ) {
-    let frame = PhysFrame::containing_address(PhysFrame::new(0xb8000));
+    let frame = PhysFrame::containing_address(PhysAddr::new(0xb8000));
     let unused_frame = unsafe { UnusedPhysFrame::new(frame) };
     let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE;
 
     let map_to_result = mapper.map_to(page, unused_frame, flags, frame_allocator);
-    map_to_result.expect("map_to failed").flash();
+    map_to_result.expect("map_to failed").flush();
 }
 
 /// Returns a mutable reference to the active level 4 page table
