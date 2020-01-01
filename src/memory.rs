@@ -6,9 +6,45 @@ use x86_64::structures::paging::{
 };
 use x86_64::{PhysAddr, VirtAddr};
 
+use bootloader::bootinfo::{MemoryMap, MemoryRegionType};
+
 /// Empty Frame allocator
 /// Returns `None`
 pub struct EmptyFrameAllocator;
+
+/// Returns usable frames from the Bootloader's memory map
+pub struct BootInfoFrameAllocator {
+    memory_map: &'static MemoryMap,
+    next: usize, // Number of next frame to return
+}
+
+impl BootInfoFrameAllocator {
+    /// Creates a Frame Allocator from the given memory map
+    ///
+    /// # Unsafe
+    /// ---------
+    /// Guarantee the usable frames of the memory map
+    /// aren't used anywhere else
+    /// ----------
+    pub unsafe fn init(memory_map: &'static MemoryMap) -> Self {
+        BootInfoFrameAllocator {
+            memory_map,
+            next: 0,
+        }
+    }
+
+    /// Gives an iterator over the usable frames in the memory map
+    fn frames(&mut self) -> impl Iterator<Item = UnusedPhysFrame> {
+        let regions = self.memory_map.iter();
+        let usable_regions = regions.filter(|r| r.region_type == MemoryRegionType::Usable);
+        let addr_ranges = usable_regions.map(|r| r.range.start_addr()..r.range.end_addr());
+        let frame_start_addresses = addr_ranges.flat_map(|addr| addr.step_by(4096));
+
+        let phys_frames =
+            frame_start_addresses.map(|addr| PhysFrame::containing_address(PhysAddr::new(addr)));
+        phys_frames.map(|frame| unsafe { UnusedPhysFrame::new(frame) })
+    }
+}
 
 // Unsafe -> Guarantee return of only unused frames
 // If two pages are mapped to same physical frame, returns `None`
