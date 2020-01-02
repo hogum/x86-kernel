@@ -15,7 +15,7 @@ entry_point!(kernel_entry); // Defined the lower level _start()
 
 /// Linker entry point
 pub fn kernel_entry(boot_info: &'static BootInfo) -> ! {
-    use x86_64::structures::paging::{MapperAllSizes, Page};
+    use x86_64::structures::paging::Page;
     use x86_64::VirtAddr;
     use x86_kernel::memory::{self};
 
@@ -25,7 +25,8 @@ pub fn kernel_entry(boot_info: &'static BootInfo) -> ! {
 
     let physical_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
     let mut mapper = unsafe { memory::init(physical_mem_offset) };
-    let mut frame_allocator = memory::EmptyFrameAllocator;
+    let mut frame_allocator =
+        unsafe { memory::BootInfoFrameAllocator::init(&boot_info.memory_map) };
     // let level_four_table = unsafe { level_four_active_table(physical_mem_offset) };
 
     // map unused page

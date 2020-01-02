@@ -54,6 +54,14 @@ unsafe impl FrameAllocator<Size4KiB> for EmptyFrameAllocator {
     }
 }
 
+unsafe impl FrameAllocator<Size4KiB> for BootInfoFrameAllocator {
+    fn allocate_frame(&mut self) -> Option<UnusedPhysFrame> {
+        let usable_frame = self.frames().nth(self.next);
+        self.next += 1;
+        usable_frame
+    }
+}
+
 /// Creates a Page table mapping (Page to Frame) for the VGA buffer Oxb8000
 ///
 /// # Arguments
