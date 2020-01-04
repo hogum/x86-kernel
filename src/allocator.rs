@@ -7,7 +7,7 @@ use core::ptr::null_mut;
 /// Dummy ZST that implements `GlobalAlloc`
 pub struct SimpleAlloc;
 
-impl GlobalAlloc for SimpleAlloc {
+unsafe impl GlobalAlloc for SimpleAlloc {
     /// Allocates heap memory
     /// Returns a raw pointer to the first byte of the
     /// allocated memory block

@@ -4,6 +4,9 @@
 #![test_runner(x86_kernel::test_runner)]
 #![reexport_test_harness_main = "test_main"] //  Rename generated test entry point from `main`
 
+extern crate alloc;
+use alloc::boxed::Box;
+
 use core::panic::PanicInfo;
 
 use x86_kernel::println;

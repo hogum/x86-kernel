@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(alloc_error_handler)]
 #![cfg_attr(test, no_main)]
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test_runner)]
@@ -15,6 +16,17 @@ pub mod interrupts;
 pub mod memory;
 pub mod serial;
 pub mod vga_buffer;
+
+/// Global Allocator
+/// Allocator instance to be used as the global heap allocator
+#[global_allocator]
+static ALLOCATOR: allocator::SimpleAlloc = allocator::SimpleAlloc;
+
+/// Called on allocation failure
+#[alloc_error_handler]
+fn alloc_error_handler(layout: alloc::alloc::Layout) -> ! {
+    panic!("Heap alloc error: {:?}", layout)
+}
 
 /// Tests entry point
 #[cfg(test)]
