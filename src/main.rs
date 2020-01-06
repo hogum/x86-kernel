@@ -9,7 +9,7 @@ use alloc::boxed::Box;
 
 use core::panic::PanicInfo;
 
-use x86_kernel::println;
+use x86_kernel::{allocator, println};
 
 use bootloader::{entry_point, BootInfo};
 
@@ -33,12 +33,13 @@ pub fn kernel_entry(boot_info: &'static BootInfo) -> ! {
     // let level_four_table = unsafe { level_four_active_table(physical_mem_offset) };
 
     // map unused page
-    let page = Page::containing_address(VirtAddr::new(0));
+    let _page = Page::containing_address(VirtAddr::new(0));
     memory::create_mapping(page, &mut mapper, &mut frame_allocator);
 
     // Write something to screen through the new mapping
-    let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
-    unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e) };
+    // let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
+    // unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e) };
+    allocator::map_heap(&mut mapper, &mut frame_allocator).expect("heap initialization failed");
 
     #[cfg(test)]
     test_main();
