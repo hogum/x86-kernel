@@ -55,5 +55,8 @@ pub fn map_heap(
         let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE;
         mapper.map_to(page, frame, flags, frame_allocator)?.flush();
     }
+    unsafe {
+        super::ALLOCATOR.lock().init(HEAP_START, HEAP_SIZE);
+    }
     Ok(())
 }

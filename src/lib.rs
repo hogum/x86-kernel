@@ -8,6 +8,8 @@
 
 use core::panic::PanicInfo;
 
+use linked_list_allocator::LockedHeap;
+
 extern crate alloc;
 
 pub mod allocator;
@@ -20,7 +22,7 @@ pub mod vga_buffer;
 /// Global Allocator
 /// Allocator instance to be used as the global heap allocator
 #[global_allocator]
-static ALLOCATOR: allocator::SimpleAlloc = allocator::SimpleAlloc;
+static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
 /// Called on allocation failure
 #[alloc_error_handler]
