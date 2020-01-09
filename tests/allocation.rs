@@ -10,6 +10,9 @@ extern crate alloc;
 use bootloader::{entry_point, BootInfo};
 use core::{panic, PanicInfo};
 
+use alloc::boxed::Box;
+use x86_kernel::{serial_print, serial_println};
+
 entry_point!(main);
 
 /// Heap test entry point
@@ -35,4 +38,12 @@ fn main(_boot_info: &'static BootInfo) -> ! {
 /// Test panic handler
 fn panic(info: &PanicInfo) -> ! {
     x86_kernel::test_panic_handler(info)
+}
+
+/// Tests allocation of value in heap memory
+fn test_allocation() -> () {
+    serial_println!("Allocation test...");
+    let value = Box::new(54);
+    assert_eq!(*heap_value, 54);
+    serial_println("[ok]");
 }
