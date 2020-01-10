@@ -47,3 +47,16 @@ fn test_allocation() -> () {
     assert_eq!(*heap_value, 54);
     serial_println("[ok]");
 }
+
+/// Tests multiple heap allocations
+fn test_reallocation() {
+    serial_println!("Multiple allocation...");
+    let n = 2000;
+    let mut vec = Vec::new();
+
+    for i in 0..n {
+        vec.push(i);
+    }
+    assert_eq!(vec.iter().sum::<u64>(), (n - 1) * (n / 2));
+    serial_println!("[ok]");
+}
