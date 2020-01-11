@@ -11,7 +11,7 @@ use bootloader::{entry_point, BootInfo};
 use core::{panic, PanicInfo};
 
 use alloc::boxed::Box;
-use x86_kernel::{serial_print, serial_println};
+use x86_kernel::{allocator::HEAP_SIZE, serial_print, serial_println};
 
 entry_point!(main);
 
@@ -41,6 +41,7 @@ fn panic(info: &PanicInfo) -> ! {
 }
 
 /// Tests allocation of value in heap memory
+#[test_case]
 fn test_allocation() -> () {
     serial_println!("Allocation test...");
     let value = Box::new(54);
@@ -49,6 +50,7 @@ fn test_allocation() -> () {
 }
 
 /// Tests multiple heap allocations
+#[test_case]
 fn test_reallocation() {
     serial_println!("Multiple allocation...");
     let n = 2000;
@@ -58,5 +60,15 @@ fn test_reallocation() {
         vec.push(i);
     }
     assert_eq!(vec.iter().sum::<u64>(), (n - 1) * (n / 2));
+    serial_println!("[ok]");
+}
+
+#[test_case]
+fn test_allocator_free_memory() {
+    serial_println!("Freeing of memory...");
+    for i in 0..HEAP_SIZE {
+        let v = Box::new(i);
+        assert_eq!(*v, i);
+    }
     serial_println!("[ok]");
 }
