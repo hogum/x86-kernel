@@ -1,4 +1,5 @@
 #![no_std]
+#![feature(alloc_error_handler)]
 #![cfg_attr(test, no_main)]
 #![feature(custom_test_frameworks)]
 #![test_runner(crate::test_runner)]
@@ -7,18 +8,42 @@
 
 use core::panic::PanicInfo;
 
+use linked_list_allocator::LockedHeap;
+
+extern crate alloc;
+
+pub mod allocator;
 pub mod gdt;
 pub mod interrupts;
+pub mod memory;
 pub mod serial;
 pub mod vga_buffer;
 
+/// Global Allocator
+/// Allocator instance to be used as the global heap allocator
+#[global_allocator]
+static ALLOCATOR: LockedHeap = LockedHeap::empty();
+
+/// Called on allocation failure
+#[alloc_error_handler]
+fn alloc_error_handler(layout: alloc::alloc::Layout) -> ! {
+    panic!("Heap alloc error: {:?}", layout)
+}
+
 /// Tests entry point
 #[cfg(test)]
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
+use bootloader::{entry_point, BootInfo};
+
+#[cfg(test)]
+entry_point!(test_kernel_entry);
+
+/// Entry point for `cargo xtest`
+#[cfg(test)]
+pub fn test_kernel_entry(_boot_info: &'static BootInfo) -> ! {
     init();
     test_main();
-    halt_loop ();
+    halt_loop();
+}
 
 #[cfg(test)]
 #[panic_handler]
@@ -57,7 +82,9 @@ pub fn init() {
 /// Halts the CPU until the next interrupt arrives
 /// The CPU is made to go to sleep while idle
 pub fn halt_loop() -> ! {
-    use x86_64::instructions::hlt;
+    loop {
+        x86_64::instructions::hlt();
+    }
 }
 
 pub fn test_runner(tests: &[&dyn Fn()]) -> () {
